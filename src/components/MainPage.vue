@@ -1,0 +1,164 @@
+<template>
+  <div>
+    <table class="table-auto">
+      <thead>
+        <tr>
+          <th>Country</th>
+          <th>Currency</th>
+          <th>6480</th>
+          <th>6480(TWD)</th>
+          <th>Difference(TWD)</th>
+          <th>Today</th>
+          <th>Higest</th>
+          <th>Lowest</th>
+          <th>Average</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Japan</td>
+          <td>JPY</td>
+          <td>12,000</td>
+          <td>{{ currency(inTWD) }}</td>
+          <td>{{ currency(calcDifference) }}</td>
+          <td>{{ currency(todayData) }}</td>
+          <td>{{ currency(highest) }}</td>
+          <td>{{ currency(lowest) }}</td>
+          <td>{{ currency(calcAverage) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div ref="echart" style="width: 800px; height: 500px"></div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, shallowRef } from "vue";
+import axios from "axios";
+import * as echarts from "echarts";
+import { currency } from "../utils/currency";
+
+// get today's data
+const latestData = ref();
+const getLastestData = () => {
+  axios
+    .get(
+      "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/twd/jpy.json"
+    )
+    .then((res) => {
+      latestData.value = res.data;
+    })
+    .catch((err) => console.log(err));
+};
+
+const todayData = computed(() => {
+  if (!latestData.value || !latestData.value.jpy) {
+    return "error";
+  }
+  return latestData.value.jpy;
+});
+
+// get the dates for the past 30 days
+const dates = ref([]);
+const today = new Date();
+const dataAxis = ref([]);
+const getDates = () => {
+  for (let i = 1; i < 31; i++) {
+    const currentDate = new Date(today);
+    currentDate.setDate(currentDate.getDate() - i);
+
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const day = String(currentDate.getDate()).padStart(2, "0");
+
+    dates.value.push(`${year}-${month}-${day}`);
+  }
+  dates.value = dates.value.reverse();
+  for (let i = 0; i < dates.value.length; i++) {
+    dataAxis.value.push(dates.value[i]);
+  }
+};
+
+// get the data for the past 30 days
+const pastData = ref([]);
+const allData = ref([]);
+const getAllData = async () => {
+  try {
+    const requests = [];
+    for (let i = 0; i < 30; i++) {
+      const response = axios.get(
+        `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${dates.value[i]}/currencies/twd/jpy.json`
+      );
+      requests.push(response);
+    }
+    const responses = await Promise.all(requests);
+    pastData.value = responses.map((res) => res.data);
+    for (let i = 0; i < pastData.value.length; i++) {
+      allData.value.push(pastData.value[i].jpy);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// calculating the difference after applying exchange rate
+const calcDifference = computed(() => {
+  if (!latestData.value || !latestData.value.jpy) {
+    return null;
+  }
+  return 3290 - 12000 / latestData.value.jpy;
+});
+
+// shows the price in TWD after applying exchange rate
+const inTWD = computed(() => {
+  if (!latestData.value || !latestData.value.jpy) {
+    return null;
+  }
+  return 12000 / latestData.value.jpy;
+});
+
+// calculate the average rate for the past 30 days
+const calcAverage = computed(() => {
+  const sum = allData.value.reduce((acc, curr) => acc + curr, 0);
+  const average = sum / allData.value.length;
+  return average;
+});
+
+// calculate the highest and lowest for the past 30 days
+const highest = computed(() => Math.max(...allData.value));
+const lowest = computed(() => Math.min(...allData.value));
+
+//chart related
+const chart = shallowRef(null);
+const echart = ref(null);
+const initChart = () => {
+  chart.value = echarts.init(echart.value);
+  setOptions();
+};
+const setOptions = () => {
+  chart.value.setOption({
+    xAxis: {
+      data: dataAxis.value,
+    },
+    yAxis: {
+      min: 4.5,
+      max: 4.7,
+      type: "value",
+    },
+    series: [
+      {
+        name: "exchange rate",
+        type: "line",
+        data: allData.value,
+      },
+    ],
+  });
+};
+
+onMounted(async () => {
+  getLastestData();
+  getDates();
+  await getAllData();
+  initChart();
+});
+</script>
