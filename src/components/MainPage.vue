@@ -1,7 +1,7 @@
 <template>
   <div>
-    <table class="w-full text-sm text-left text-gray-500">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    <table class="w-full text-sm text-left text-gray-500 mb-5">
+      <thead class="text-md text-gray-700 uppercase bg-gray-50">
         <tr>
           <th scope="col" class="px-6 py-3">Country</th>
           <th scope="col" class="px-6 py-3">Currency</th>
@@ -19,9 +19,9 @@
           <td class="px-6 py-4">Japan</td>
           <td class="px-6 py-4">JPY</td>
           <td class="px-6 py-4">12,000</td>
-          <td class="px-6 py-4">{{ currency(inTWD) }}</td>
-          <td class="px-6 py-4">{{ currency(calcDifference) }}</td>
-          <td class="px-6 py-4">{{ currency(todayData) }}</td>
+          <td class="px-6 py-4">{{ inTWD }}</td>
+          <td class="px-6 py-4">{{ calcDifference }}</td>
+          <td class="px-6 py-4">{{ todayData }}</td>
           <td class="px-6 py-4">{{ currency(highest) }}</td>
           <td class="px-6 py-4">{{ currency(lowest) }}</td>
           <td class="px-6 py-4">{{ currency(calcAverage) }}</td>
@@ -55,7 +55,7 @@ const todayData = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
     return "error";
   }
-  return latestData.value.jpy;
+  return currency(latestData.value.jpy);
 });
 
 // get the dates for the past 30 days
@@ -84,37 +84,41 @@ const pastData = ref([]);
 const allData = ref([]);
 const getAllData = async () => {
   try {
-    const requests = [];
-    for (let i = 0; i < 30; i++) {
-      const response = axios.get(
-        `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${dates.value[i]}/currencies/twd/jpy.json`
-      );
-      requests.push(response);
-    }
-    const responses = await Promise.all(requests);
-    pastData.value = responses.map((res) => res.data);
-    for (let i = 0; i < pastData.value.length; i++) {
-      allData.value.push(pastData.value[i].jpy);
-    }
+    const responses = await Promise.all(
+      dates.value.map(async (date) => {
+        try {
+          const response = await axios.get(
+            `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${date}/currencies/twd/jpy.json`
+          );
+          return response.data;
+        } catch (error) {
+          console.error(`Error for date ${date}:`, error);
+          return { date, jpy: null };
+        }
+      })
+    );
+
+    pastData.value = responses;
+    allData.value = responses.map((data) => data.jpy);
   } catch (error) {
-    console.log(error);
+    console.error("Error:", error);
   }
 };
 
 // calculating the difference after applying exchange rate
 const calcDifference = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
-    return null;
+    return "error";
   }
-  return 3290 - 12000 / latestData.value.jpy;
+  return currency(3290 - 12000 / latestData.value.jpy);
 });
 
 // shows the price in TWD after applying exchange rate
 const inTWD = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
-    return null;
+    return "error";
   }
-  return 12000 / latestData.value.jpy;
+  return currency(12000 / latestData.value.jpy);
 });
 
 // calculate the average rate for the past 30 days
@@ -126,9 +130,12 @@ const calcAverage = computed(() => {
 
 // calculate the highest and lowest for the past 30 days
 const highest = computed(() => Math.max(...allData.value));
-const lowest = computed(() => Math.min(...allData.value));
+const lowest = computed(() => {
+  const nonNullValues = allData.value.filter((value) => value !== null);
+  return nonNullValues.length > 0 ? Math.min(...nonNullValues) : null;
+});
 
-//chart related
+//chart related settings
 const chart = shallowRef(null);
 const echart = ref(null);
 const initChart = () => {
@@ -137,9 +144,13 @@ const initChart = () => {
 };
 const setOptions = () => {
   chart.value.setOption({
-    // title: {
-    //   text: "Exchange Rate for the Past 30 Days",
-    // },
+    title: {
+      text: "Exchange Rate for the Past 30 Days",
+      left: "center",
+      textStyle: {
+        fontStyle: "italic",
+      },
+    },
     xAxis: {
       data: dataAxis.value,
       name: "DATE",
