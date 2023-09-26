@@ -1,34 +1,34 @@
 <template>
   <div>
-    <table class="table-auto">
-      <thead>
+    <table class="w-full text-sm text-left text-gray-500">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50">
         <tr>
-          <th>Country</th>
-          <th>Currency</th>
-          <th>6480</th>
-          <th>6480(TWD)</th>
-          <th>Difference(TWD)</th>
-          <th>Today</th>
-          <th>Higest</th>
-          <th>Lowest</th>
-          <th>Average</th>
+          <th scope="col" class="px-6 py-3">Country</th>
+          <th scope="col" class="px-6 py-3">Currency</th>
+          <th scope="col" class="px-6 py-3">6480</th>
+          <th scope="col" class="px-6 py-3">6480(TWD)</th>
+          <th scope="col" class="px-6 py-3">Difference(TWD)</th>
+          <th scope="col" class="px-6 py-3">Today</th>
+          <th scope="col" class="px-6 py-3">Higest</th>
+          <th scope="col" class="px-6 py-3">Lowest</th>
+          <th scope="col" class="px-6 py-3">Average</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Japan</td>
-          <td>JPY</td>
-          <td>12,000</td>
-          <td>{{ currency(inTWD) }}</td>
-          <td>{{ currency(calcDifference) }}</td>
-          <td>{{ currency(todayData) }}</td>
-          <td>{{ currency(highest) }}</td>
-          <td>{{ currency(lowest) }}</td>
-          <td>{{ currency(calcAverage) }}</td>
+        <tr class="bg-white border-b">
+          <td class="px-6 py-4">Japan</td>
+          <td class="px-6 py-4">JPY</td>
+          <td class="px-6 py-4">12,000</td>
+          <td class="px-6 py-4">{{ currency(inTWD) }}</td>
+          <td class="px-6 py-4">{{ currency(calcDifference) }}</td>
+          <td class="px-6 py-4">{{ currency(todayData) }}</td>
+          <td class="px-6 py-4">{{ currency(highest) }}</td>
+          <td class="px-6 py-4">{{ currency(lowest) }}</td>
+          <td class="px-6 py-4">{{ currency(calcAverage) }}</td>
         </tr>
       </tbody>
     </table>
-    <div ref="echart" style="width: 800px; height: 500px"></div>
+    <div ref="echart" class="mx-auto" style="width: 800px; height: 500px"></div>
   </div>
 </template>
 
@@ -137,13 +137,33 @@ const initChart = () => {
 };
 const setOptions = () => {
   chart.value.setOption({
+    // title: {
+    //   text: "Exchange Rate for the Past 30 Days",
+    // },
     xAxis: {
       data: dataAxis.value,
+      name: "DATE",
+      nameTextStyle: {
+        fontWeight: "bold",
+        fontSize: "14",
+      },
+      axisLabel: {
+        rotate: 60,
+        interval: 3,
+      },
     },
     yAxis: {
       min: 4.5,
       max: 4.7,
       type: "value",
+      name: "EXCHANGE RATE",
+      nameTextStyle: {
+        fontWeight: "bold",
+        fontSize: "14",
+      },
+    },
+    tooltip: {
+      trigger: "axis",
     },
     series: [
       {
