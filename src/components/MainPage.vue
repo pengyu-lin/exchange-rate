@@ -40,6 +40,7 @@ import { currency } from "../utils/currency";
 
 // get today's data
 const latestData = ref();
+const todayData = ref()
 const getLastestData = () => {
   axios
     .get(
@@ -47,16 +48,10 @@ const getLastestData = () => {
     )
     .then((res) => {
       latestData.value = res.data;
+      todayData.value = res.data.jpy
     })
     .catch((err) => console.log(err));
 };
-
-const todayData = computed(() => {
-  if (!latestData.value || !latestData.value.jpy) {
-    return "error";
-  }
-  return currency(latestData.value.jpy);
-});
 
 // get the dates for the past 30 days
 const dates = ref([]);
