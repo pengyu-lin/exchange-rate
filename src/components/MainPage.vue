@@ -102,7 +102,7 @@ const calcDifference = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
     return "error";
   }
-  return currency(3290 - 12000 / latestData.value.jpy);
+  return 3290 - 12000 / latestData.value.jpy;
 });
 
 // shows the price in TWD after applying exchange rate
@@ -110,7 +110,7 @@ const inTWD = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
     return "error";
   }
-  return currency(12000 / latestData.value.jpy);
+  return 12000 / latestData.value.jpy;
 });
 
 // calculate the average rate for the past 30 days
