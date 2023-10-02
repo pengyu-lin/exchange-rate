@@ -19,9 +19,9 @@
           <td class="px-6 py-4">Japan</td>
           <td class="px-6 py-4">JPY</td>
           <td class="px-6 py-4">12,000</td>
-          <td class="px-6 py-4">{{ inTWD }}</td>
-          <td class="px-6 py-4">{{ calcDifference }}</td>
-          <td class="px-6 py-4">{{ todayData }}</td>
+          <td class="px-6 py-4">{{ currency(inTWD) }}</td>
+          <td class="px-6 py-4">{{ currency(calcDifference) }}</td>
+          <td class="px-6 py-4">{{ currency(todayJpy) }}</td>
           <td class="px-6 py-4">{{ currency(highest) }}</td>
           <td class="px-6 py-4">{{ currency(lowest) }}</td>
           <td class="px-6 py-4">{{ currency(calcAverage) }}</td>
@@ -37,36 +37,33 @@ import { ref, computed, onMounted, shallowRef } from "vue";
 import axios from "axios";
 import * as echarts from "echarts";
 import { currency } from "../utils/currency";
+import moment from "moment-timezone";
 
 // get today's data
 const latestData = ref();
-const todayData = ref()
+const todayJpy = ref();
+const cstDate = moment.tz("America/Chicago").format("YYYY-MM-DD");
+
 const getLastestData = () => {
   axios
     .get(
-      "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/twd/jpy.json"
+      `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${cstDate}/currencies/twd/jpy.json`
     )
     .then((res) => {
       latestData.value = res.data;
-      todayData.value = res.data.jpy
+      todayJpy.value = res.data.jpy;
     })
     .catch((err) => console.log(err));
 };
 
 // get the dates for the past 30 days
 const dates = ref([]);
-const today = new Date();
 const dataAxis = ref([]);
 const getDates = () => {
-  for (let i = 1; i < 31; i++) {
-    const currentDate = new Date(today);
-    currentDate.setDate(currentDate.getDate() - i);
+  const today = moment(cstDate, "YYYY-MM-DD");
 
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-    const day = String(currentDate.getDate()).padStart(2, "0");
-
-    dates.value.push(`${year}-${month}-${day}`);
+  for (let i = 0; i < 30; i++) {
+    dates.value.push(today.clone().subtract(i, "days").format("YYYY-MM-DD"));
   }
   dates.value = dates.value.reverse();
   for (let i = 0; i < dates.value.length; i++) {
