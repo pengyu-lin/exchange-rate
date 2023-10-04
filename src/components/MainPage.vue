@@ -1,13 +1,33 @@
 <template>
   <div>
+    <div class="flex">
+      <label for="twd" class="pe-5"
+        ><input
+          id="twd"
+          v-model="currencyType"
+          type="radio"
+          class="mx-1"
+          @change="fetchData"
+          value="twd" />TWD</label
+      >
+      <label for="cad"
+        ><input
+          id="cad"
+          v-model="currencyType"
+          type="radio"
+          class="mx-1"
+          @change="fetchData"
+          value="cad" />CAD</label
+      >
+    </div>
     <table class="w-full text-sm text-left text-gray-500 mb-5">
       <thead class="text-md text-gray-700 uppercase bg-gray-50">
         <tr>
           <th scope="col" class="px-6 py-3">Country</th>
           <th scope="col" class="px-6 py-3">Currency</th>
           <th scope="col" class="px-6 py-3">6480</th>
-          <th scope="col" class="px-6 py-3">6480(TWD)</th>
-          <th scope="col" class="px-6 py-3">Difference(TWD)</th>
+          <th scope="col" class="px-6 py-3">In {{ currencyType }}</th>
+          <th scope="col" class="px-6 py-3">Difference</th>
           <th scope="col" class="px-6 py-3">Today</th>
           <th scope="col" class="px-6 py-3">Higest</th>
           <th scope="col" class="px-6 py-3">Lowest</th>
@@ -19,9 +39,9 @@
           <td class="px-6 py-4">Japan</td>
           <td class="px-6 py-4">JPY</td>
           <td class="px-6 py-4">12,000</td>
-          <td class="px-6 py-4">{{ currency(inTWD) }}</td>
+          <td class="px-6 py-4">{{ currency(inCurrency) }}</td>
           <td class="px-6 py-4">{{ currency(calcDifference) }}</td>
-          <td class="px-6 py-4">{{ currency(todayJpy) }}</td>
+          <td class="px-6 py-4">{{ currency(todayRate) }}</td>
           <td class="px-6 py-4">{{ currency(highest) }}</td>
           <td class="px-6 py-4">{{ currency(lowest) }}</td>
           <td class="px-6 py-4">{{ currency(calcAverage) }}</td>
@@ -39,19 +59,22 @@ import * as echarts from "echarts";
 import { currency } from "../utils/currency";
 import moment from "moment-timezone";
 
+// switch between CAD and TWD
+const currencyType = ref("twd");
+
 // get today's data
 const latestData = ref();
-const todayJpy = ref();
+const todayRate = ref();
 const cstDate = moment.tz("America/Chicago").format("YYYY-MM-DD");
 
 const getLastestData = () => {
   axios
     .get(
-      `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${cstDate}/currencies/twd/jpy.json`
+      `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${cstDate}/currencies/${currencyType.value}/jpy.json`
     )
     .then((res) => {
       latestData.value = res.data;
-      todayJpy.value = res.data.jpy;
+      todayRate.value = res.data.jpy;
     })
     .catch((err) => console.log(err));
 };
@@ -80,7 +103,7 @@ const getAllData = async () => {
       dates.value.map(async (date) => {
         try {
           const response = await axios.get(
-            `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${date}/currencies/twd/jpy.json`
+            `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${date}/currencies/${currencyType.value}/jpy.json`
           );
           return response.data;
         } catch (error) {
@@ -102,11 +125,15 @@ const calcDifference = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
     return "error";
   }
-  return 3290 - 12000 / latestData.value.jpy;
+  if (currencyType.value === "twd") {
+    return 3290 - 12000 / latestData.value.jpy;
+  } else {
+    return 129.99 - 12000 / latestData.value.jpy;
+  }
 });
 
 // shows the price in TWD after applying exchange rate
-const inTWD = computed(() => {
+const inCurrency = computed(() => {
   if (!latestData.value || !latestData.value.jpy) {
     return "error";
   }
@@ -134,6 +161,20 @@ const initChart = () => {
   chart.value = echarts.init(echart.value);
   setOptions();
 };
+const min = computed(() => {
+  if (currencyType.value === "twd") {
+    return 4.5;
+  } else {
+    return 106;
+  }
+});
+const max = computed(() => {
+  if (currencyType.value === "twd") {
+    return 4.7;
+  } else {
+    return 112;
+  }
+});
 const setOptions = () => {
   chart.value.setOption({
     title: {
@@ -156,8 +197,8 @@ const setOptions = () => {
       },
     },
     yAxis: {
-      min: 4.5,
-      max: 4.7,
+      min: min.value,
+      max: max.value,
       type: "value",
       name: "EXCHANGE RATE",
       nameTextStyle: {
@@ -176,6 +217,17 @@ const setOptions = () => {
       },
     ],
   });
+};
+
+const fetchData = async () => {
+  dates.value = [];
+  allData.value = [];
+  dataAxis.value = [];
+  pastData.value = [];
+  getLastestData();
+  getDates();
+  await getAllData();
+  setOptions();
 };
 
 onMounted(async () => {
