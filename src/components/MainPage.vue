@@ -1,24 +1,22 @@
 <template>
   <div>
     <div class="flex">
-      <label for="twd" class="pe-5"
-        ><input
-          id="twd"
-          v-model="currencyType"
-          type="radio"
-          class="mx-1"
-          @change="fetchData"
-          value="twd" />TWD</label
-      >
-      <label for="cad"
-        ><input
-          id="cad"
-          v-model="currencyType"
-          type="radio"
-          class="mx-1"
-          @change="fetchData"
-          value="cad" />CAD</label
-      >
+      <input
+        id="twd"
+        v-model="currencyType"
+        type="radio"
+        class="mx-1"
+        @change="fetchData"
+        value="twd" />
+      <label for="twd" class="pe-5 text-md text-gray-700 uppercase">TWD</label>
+      <input
+        id="cad"
+        v-model="currencyType"
+        type="radio"
+        class="mx-1"
+        @change="fetchData"
+        value="cad" />
+      <label for="cad" class="pe-5 text-md text-gray-700 uppercase">CAD</label>
     </div>
     <table class="w-full text-sm text-left text-gray-500 mb-5">
       <thead class="text-md text-gray-700 uppercase bg-gray-50">
