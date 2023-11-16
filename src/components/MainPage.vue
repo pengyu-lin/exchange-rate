@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex">
+    <div class="flex align-middle">
       <input
         id="twd"
         v-model="currencyType"
@@ -168,7 +168,7 @@ const min = computed(() => {
 });
 const max = computed(() => {
   if (currencyType.value === "twd") {
-    return 4.7;
+    return 4.9;
   } else {
     return 112;
   }
