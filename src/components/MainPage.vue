@@ -159,20 +159,7 @@ const initChart = () => {
   chart.value = echarts.init(echart.value);
   setOptions();
 };
-const min = computed(() => {
-  if (currencyType.value === "twd") {
-    return 4.5;
-  } else {
-    return 106;
-  }
-});
-const max = computed(() => {
-  if (currencyType.value === "twd") {
-    return 4.9;
-  } else {
-    return 112;
-  }
-});
+
 const setOptions = () => {
   chart.value.setOption({
     title: {
@@ -195,8 +182,8 @@ const setOptions = () => {
       },
     },
     yAxis: {
-      min: min.value,
-      max: max.value,
+      min: Math.floor(lowest.value*100)/100,
+      max: Math.ceil(highest.value*100)/100,
       type: "value",
       name: "EXCHANGE RATE",
       nameTextStyle: {
